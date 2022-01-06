@@ -61,25 +61,37 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-
-const displayMovements= function(movements){
+const displayMovements = function (movements) {
   containerMovements.innerHTML = '';
   // .textContent = 0
-  movements.forEach(function(mov, i){
+  movements.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
 
     const html = `
     <div class="movements__row">
-      <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
+      <div class="movements__type movements__type--${type}">${
+      i + 1
+    } ${type}</div>
       <div class="movements__value">${mov}</div>
     </div>
     `;
-    containerMovements.insertAdjacentHTML
-    ('afterbegin', html);
-    
-  })
+    containerMovements.insertAdjacentHTML('afterbegin', html);
+  });
 };
-displayMovements(account1.movements)
+displayMovements(account1.movements);
+
+
+const createUsernames = function (accs) {
+  accs.forEach(function (acc){
+    acc.username = acc.owner.toLowerCase().split(' ').map(name => name[0]).join('');
+    acc.pin2 = 888;
+    return acc.username;
+  })  
+  
+};
+console.log(createUsernames(accounts));
+console.log(accounts);
+
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // LECTURES
@@ -93,15 +105,13 @@ const currencies = new Map([
 const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
 /////////////////////////////////////////////////
-const arr = ['a','b','c','d','e'];
+const arr = ['a', 'b', 'c', 'd', 'e'];
 
-movements.forEach(function(move,i){
-  if(move > 0){
+movements.forEach(function (move, i) {
+  if (move > 0) {
     console.log(`you have made ${move} deposits`);
   } else {
     console.log(`you have made  ${Math.abs(move)} Withdrawals`);
-
   }
-})
-
+});
 
