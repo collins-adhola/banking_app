@@ -80,14 +80,16 @@ const displayMovements = function (movements) {
 };
 displayMovements(account1.movements);
 
-
 const createUsernames = function (accs) {
-  accs.forEach(function (acc){
-    acc.username = acc.owner.toLowerCase().split(' ').map(name => name[0]).join('');
-    acc.pin2 = 888;
+  accs.forEach(function (acc) {
+    acc.username = acc.owner
+      .toLowerCase()
+      .split(' ')
+      .map(name => name[0])
+      .join('');
+
     return acc.username;
-  })  
-  
+  });
 };
 console.log(createUsernames(accounts));
 console.log(accounts);
@@ -115,3 +117,50 @@ movements.forEach(function (move, i) {
   }
 });
 
+//***********/ FILTER************************
+const deposits = movements.filter(function (mov) {
+  return mov > 0;
+});
+
+//Use for in filters
+const depositFor = [];
+for (const mov of movements) if (mov > 0) depositFor.push(mov);
+console.log(depositFor);
+
+const withdrawals = [];
+for (const mov of movements) if (mov < 0) withdrawals.push(mov);
+
+console.log(withdrawals);
+
+//*************reduce* Adds array elements from accumilator initial***** */
+// const balance = movements.reduce(function(acc, curr, i, arr){
+//   console.log(`Interation ${i}:${curr}`)
+//   return acc + curr;
+// },0);
+// console.log(balance)
+
+//Simple arrow from above
+const balance2 = movements.reduce((acc, curr) => acc + curr, 0);
+console.log(balance2);
+
+// for loops in filter
+let newReduce = 0;
+for (const mov of movements) newReduce += mov;
+
+console.log(newReduce);
+
+//++++++Display balance on app+++++++++
+
+const calcDisplayBalance = function (movements) {
+  const balance = movements.reduce((acc, curr) => acc + curr, 0);
+  labelBalance.textContent = `${balance} GBP`;
+};
+
+calcDisplayBalance(account1.movements);
+
+// Max value with reduce
+const max = movements.reduce((acc, mov) => {
+  if (acc > mov) return acc;
+  else return mov;
+}, movements[0]);
+console.log(max);
