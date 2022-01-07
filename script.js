@@ -164,3 +164,23 @@ const max = movements.reduce((acc, mov) => {
   else return mov;
 }, movements[0]);
 console.log(max);
+
+
+//Chaining....pipeline
+const euroToUSD = 1.1;
+
+const totalDepositsUSD = movements
+.filter(mov => mov > 0)
+.map(mov=> mov * euroToUSD)
+.reduce((acc,mov) => acc + mov,0);
+console.log(totalDepositsUSD);
+labelSumIn.textContent = totalDepositsUSD.toFixed(2);
+
+const totalWithdrawalsUSD = movements
+.filter(mov => mov < 0)
+.map((mov=> mov * euroToUSD))
+.reduce((acc, curr)=> Math.abs(acc + curr))
+// .parseFloat(totalWithdrawalsUSD).fixed(2);
+console.log(totalWithdrawalsUSD.toFixed(2));
+//Math.round(totalWithdrawalsUSD);
+labelSumOut.textContent = totalWithdrawalsUSD.toFixed(2);
