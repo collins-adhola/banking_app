@@ -90,6 +90,22 @@ const createUsernames = function (accs) {
 };
 createUsernames(accounts);
 
+
+//Update UI
+const updateUI = function(acc){
+      
+      //Display summary
+
+      calcDisplaySummary(currentAccount);
+
+      //Display movements
+      displayMovements(currentAccount.movements);
+
+      //Display balance
+      calcDisplayBalance(currentAccount);
+
+}
+
 //Event handler
 let currentAccount; // out of func bcoz needed in other functions
 
@@ -115,19 +131,32 @@ btnLogin.addEventListener('click', function (e) {
     // Clear input fields
     inputLoginUsername.value = inputLoginPin.value = '';
     inputLoginPin.blur();
-    //Display summary
 
-    calcDisplaySummary(currentAccount);
-
-    //Display movements
-    displayMovements(currentAccount.movements);
-
-    //Display balance
-    calcDisplayBalance(currentAccount.movements);
-
-    console.log('Loginpin');
+    updateUI(currentAccount);
+    
   }
 });
+
+btnTransfer.addEventListener('click',function(e){
+  e.preventDefault();
+  const amount = Number(inputTransferAmount.value);
+  const receiverAcc = accounts.find(acc=>acc.username===inputTransferTo.value);
+  inputTransferAmount.value = inputTransferTo.value = '';
+
+  if(amount > 0 && receiverAcc && currentAccount.balance >= amount && receiverAcc?.username !== currentAccount.username){
+    // The actual Transfer
+    currentAccount.movements.push(-amount);
+    receiverAcc.movements.push(amount);
+
+    //Update UI
+    updateUI(currentAccount);
+  }
+  
+})
+
+
+
+
 
 /////////////////////+LECTURES+////////////////////////////
 
@@ -185,10 +214,11 @@ let newReduce = 0;
 
 //++++++Display balance on app+++++++++
 
-const calcDisplayBalance = function (movements) {
-  const balance = movements.reduce((acc, curr) => acc + curr, 0);
-  labelBalance.textContent = `${balance}€`;
-  labelBalance.textContent = `${balance}`;
+const calcDisplayBalance = function (acc) {
+  acc.balance = acc.movements.reduce((acc, curr) => acc + curr, 0);
+  
+  labelBalance.textContent = `${acc.balance}€`;
+ 
 };
 
 // Max value with reduce
