@@ -107,6 +107,16 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
+
+// dates
+const now = new Date();
+const day = now.getDate();
+const month = now.getMonth();
+const year = now.getFullYear();
+const hour = now.getHours();
+const minutes = now.getMinutes();
+labelDate.textContent = `${day}/${month}/${year}, ${hour}:${minutes}`;
+
 const displayMovements = function (movements, sort = false) {
   containerMovements.innerHTML = '';
   
