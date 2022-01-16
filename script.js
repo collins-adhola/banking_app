@@ -107,7 +107,7 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const formatMovementDate = function (date) {
+const formatMovementDate = function (date, locale) {
   const calcDaysPassed = (date1, date2) =>
     Math.round(Math.abs(date2 - date1) / (1000 * 60 * 60 * 24));
 
@@ -117,18 +117,23 @@ const formatMovementDate = function (date) {
   if (daysPassed === 0) return 'Today';
   if (daysPassed === 1) return 'Yesterday';
   if (daysPassed <= 7) return `${daysPassed} days ago`;
-  else {
-    // This can be removed and it will still work. Return prevents further code execution.
-    // const dayPassed = calcDaysPassed(new Date(), date);
-    // console.log(dayPassed);
-    // const day = `${date.getDate()}`.padStart(2, 0);
-    // const month = `${date.getMonth() + 1}`.padStart(2, 0);
-    // const year = date.getFullYear();
 
-    // return `${day}/${month}/${year}`;
-    
-  }
+  // This can be removed and it will still work. Return prevents further code execution.
+  // const dayPassed = calcDaysPassed(new Date(), date);
+  // console.log(dayPassed);
+  // const day = `${date.getDate()}`.padStart(2, 0);
+  // const month = `${date.getMonth() + 1}`.padStart(2, 0);
+  // const year = date.getFullYear();
 
+  // return `${day}/${month}/${year}`;
+
+  return new Intl.DateTimeFormat(locale).format(date);
+};
+const formatCur = function (value, locale, currency) {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+  }).format(value);
 };
 
 //......................................................
@@ -142,16 +147,23 @@ const displayMovements = function (acc, sort = false) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
     //""""""""""""""""""""""""""""""""""""""""""""""""""
     const date = new Date(acc.movementsDates[i]);
-    const displayDate = formatMovementDate(date);
+    const displayDate = formatMovementDate(date, acc.locale);
+    //The long way
+    // const formattedMov = new Intl.NumberFormat(acc.locale, {
+    //   style:'currency',
+    //   currency: acc.currency,
+    // }).format(mov);
 
+    const formattedMov = formatCur(mov, acc.locale, acc.currency);
     //""""""""""""""""""""""""""""""""""""""""""""""""""""
+
     const html = `
     <div class="movements__row">
       <div class="movements__type movements__type--${type}">${
       i + 1
     } ${type}</div>
       <div class="movements__date">${displayDate}</div>
-      <div class="movements__value">${mov.toFixed(2)} €</div>
+      <div class="movements__value">${formattedMov} </div>
     </div>
     `;
     containerMovements.insertAdjacentHTML('afterbegin', html);
@@ -183,9 +195,33 @@ const updateUI = function (acc) {
   //Display balance
   calcDisplayBalance(currentAccount);
 };
+const startLogOutTimer = function () {
+  const tick = function () {
+    const min = String(Math.trunc(time / 60)).padStart(2, 0);
+    const sec = String(time % 60).padStart(2, 0);
+    //In each call, print the remaining time to UI
+    labelTimer.textContent = `${min} ${sec}`;
+
+    // Decrease 1s
+
+    //When 0 seconds, stop timer and log out user
+    if (time === 0) {
+      clearInterval(timer);
+      labelWelcome.textContent = 'Log in get started';
+      containerApp.style.opacity = 0;
+    }
+    time--; //time = time-1
+  };
+  //set ntime to 5 minutes
+  let time = 120;
+  //Call the timer every second
+  tick();
+  const timer = setInterval(tick, 1000);
+  return timer;
+};
 
 //Event handler
-let currentAccount; // out of func bcoz needed in other functions
+let currentAccount, timer; // out of func bcoz needed in other functions
 
 btnLogin.addEventListener('click', function (e) {
   //Prevent form from submitting
@@ -219,7 +255,16 @@ btnLogin.addEventListener('click', function (e) {
     inputLoginUsername.value = inputLoginPin.value = '';
     inputLoginPin.blur();
 
+    //Timer
+    if (timer) clearInterval(timer);
+    timer = startLogOutTimer();
+
+    //update UI
     updateUI(currentAccount);
+
+    //Reset time after activity
+    clearTimeout(timer);
+    timer = startLogOutTimer();
   }
 });
 
@@ -246,6 +291,10 @@ btnTransfer.addEventListener('click', function (e) {
     receiverAcc.movementsDates.push(new Date().toISOString());
     //Update UI
     updateUI(currentAccount);
+
+    //Rest timer after transfer activity
+    clearTimeout(timer);
+    timer = startLogOutTimer();
   }
 });
 
@@ -255,12 +304,22 @@ btnLoan.addEventListener('click', function (e) {
   const amount = Math.floor(inputLoanAmount.value);
 
   if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
-    //Add movements
-    currentAccount.movements.push(amount);
-    //add loan date
-    currentAccount.movementsDates.push(new Date().toISOString());
-    //Update UI
-    updateUI(currentAccount);
+    
+
+    //setTimeout to wrap movements
+
+    setTimeout(function () {
+      currentAccount.movements.push(amount);
+      //add loan date
+      currentAccount.movementsDates.push(new Date().toISOString());
+      //Update UI
+      updateUI(currentAccount);
+      
+
+      //Reset timer
+      clearTimeout(timer);
+      timer = startLogOutTimer();
+    }, 2500);
   }
   inputLoanAmount.value = '';
   console.log('yes loan');
@@ -349,9 +408,9 @@ for (const mov of movements) newReduce += mov;
 //++++++Display balance on app+++++++++
 
 const calcDisplayBalance = function (acc) {
-  acc.balance = acc.movements.reduce((acc, curr) => acc + curr, 0);
+  acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0);
 
-  labelBalance.textContent = `${acc.balance.toFixed(2)}€`;
+  labelBalance.textContent = formatCur(acc.balance, acc.locale, acc.currency);
 };
 
 // Max value with reduce
@@ -365,19 +424,19 @@ const calcDisplaySummary = function (acc) {
   const incomes = acc.movements
     .filter(mov => mov > 0)
     .reduce((acc, mov) => acc + mov, 0);
-  labelSumIn.textContent = `${incomes.toFixed(2)}€`;
+  labelSumIn.textContent = formatCur(incomes, acc.locale, acc.currency);
 
   const out = acc.movements
     .filter(mov => mov < 0)
     .reduce((acc, curr) => acc + curr);
-  labelSumOut.textContent = `${Math.abs(out).toFixed(2)}€`;
+  labelSumOut.textContent = formatCur(Math.abs(out), acc.locale, acc.currency);
 
   const interest = acc.movements
     .filter(mov => mov > 0)
     .map(deposit => (deposit * acc.interestRate) / 100)
     .filter(int => int >= 1) //includng only interests greater tha 1
     .reduce((acc, int) => acc + int, 0);
-  labelSumInterest.textContent = `${interest.toFixed(2)}€`;
+  labelSumInterest.textContent = formatCur(interest, acc.locale, acc.currency);
 };
 
 //Chaining....pipeline
